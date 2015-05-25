@@ -1,0 +1,16 @@
+{
+  "name": "siri-eesec",
+  "version": "1.0.0",
+  "description": "",
+  "main": "siri-eesec.es6.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Kosta",
+  "license": "ISC",
+  "dependencies": {
+    "debug": "^2.2.0",
+    "imap": "^0.8.14",
+    "request": "^2.55.0"
+  }
+}

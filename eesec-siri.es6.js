@@ -1,11 +1,11 @@
-let debug = require('debug')('siri-eesec');
+let debug = require('debug')('eesec:siri');
 
 let request = require('request');
 
-import ICloudNotes from './icloud-notes.es6.js';
+import SiriNotes from './siri-notes.es6.js';
 
-let user_configs = require('./user_configs.js');
-// let user_configs = [
+let config_siri = require('./config_siri.js');
+// let config_siri = [
 //     {
 //         name:     'User #1',                      // display name for logging
 //         user:     'my_icloud_login_1@icloud.com', // iCloud login
@@ -17,15 +17,15 @@ let user_configs = require('./user_configs.js');
 //         password: 'my_icloud_password_2'          // iCloud password
 //     }
 // ];
-// module.exports = user_configs;
+// module.exports = config_siri;
 
-let alarm_config = require('./alarm_config.js');
-// let alarm_config = {
+let config_alarm = require('./config_alarm.js');
+// let config_alarm = {
 //     base_url: 'http://eesec',  // EESec hostname (in the local network)
 //     user:     'EESec user',    // EESec username
 //     password: 'EESec password' // EESec password
 // };
-// module.exports = alarm_config;
+// module.exports = config_alarm;
 
 let do_request = (name, url, user, password) => {
 	debug('using URL: [%s] %s', name, url);
@@ -37,7 +37,7 @@ let do_request = (name, url, user, password) => {
   	});
 };
 
-let handleMessage = (msg, user_config, alarm_config) => {
+let handleMessage = (msg, user_config, config_alarm) => {
 	msg = msg.toLowerCase();
 	debug('message received: [%s] %s', user_config.name, msg);
 
@@ -46,7 +46,7 @@ let handleMessage = (msg, user_config, alarm_config) => {
 	let mode = msg.replace(keyword, '');
 	debug('switch to mode: [%s] %s', user_config.name, mode);
 
-	let url = alarm_config.base_url + '/action/panelCondPost?area=1&mode=';
+	let url = config_alarm.base_url + '/action/panelCondPost?area=1&mode=';
 	switch(mode) {
 		case 'aus':  url += '0'; break;
 		case 'an':   url += '1'; break;
@@ -54,11 +54,11 @@ let handleMessage = (msg, user_config, alarm_config) => {
 		default:     debug('***** no matching mode found: [%s] %s', user_config.name, mode); return;
 	}
 
-	do_request(user_config.name, url, alarm_config.user, alarm_config.password);
+	do_request(user_config.name, url, config_alarm.user, config_alarm.password);
 
 	return true;
 }
 
-let connections = user_configs.map((user_config) => {
-	return new ICloudNotes(user_config, (msg) => { return handleMessage(msg, user_config, alarm_config); });
+let connections = config_siri.map((user_config) => {
+	return new SiriNotes(user_config, (msg) => { return handleMessage(msg, user_config, config_alarm); });
 });

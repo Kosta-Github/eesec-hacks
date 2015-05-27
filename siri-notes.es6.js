@@ -1,8 +1,8 @@
-let debug = require('debug')('icloud-notes');
+let debug = require('debug')('siri-notes');
 
 let Imap = require('imap');
 
-export default class ICloudNotes {
+export default class SiriNotes {
 
 	constructor(config, handle_cb) {
 		this.config    = config;

@@ -1,20 +1,20 @@
-let debug = require('debug')('check-status-eesec');
+let debug = require('debug')('eesec:prowl');
 
 let request = require('request');
 
-let alarm_config = require('./alarm_config.js');
-// let alarm_config = {
+let config_alarm = require('./config_alarm.js');
+// let config_alarm = {
 //     base_url: 'http://eesec',  // EESec hostname (in the local network)
 //     user:     'EESec user',    // EESec username
 //     password: 'EESec password' // EESec password
 // };
-// module.exports = alarm_config;
+// module.exports = config_alarm;
 
-let prowl_config = require('./prowl_config.js');
-// let prowl_config = {
+let config_prowl = require('./config_prowl.js');
+// let config_prowl = {
 //     apikey: 'abcedfghijklmnopqrstuvwxyz0123456789' // prowl API key from this page: https://www.prowlapp.com/api_settings.php
 // };
-// module.exports = prowl_config;
+// module.exports = config_prowl;
 
 const max_log_count = 100;
 const check_interval = 15; // in seconds
@@ -43,7 +43,7 @@ let check_status = () => {
 	debug('checking status...');
 
 	do_request(
-		alarm_config.base_url + alarm_get_logs, alarm_config.user, alarm_config.password,
+		config_alarm.base_url + alarm_get_logs, config_alarm.user, config_alarm.password,
 		(err, data) => {
 			if(err) { debug('***** error: %s', JSON.stringify(err)); throw err; }
 
@@ -62,7 +62,7 @@ let check_status = () => {
 						last_mode = mode;
 
 						let prowl_params = {
-							apikey:      prowl_config.apikey,
+							apikey:      config_prowl.apikey,
 							priority:    prio,
 							url:         '',
 							application: 'EESec',

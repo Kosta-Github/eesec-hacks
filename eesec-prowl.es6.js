@@ -24,7 +24,7 @@ const alarm_get_logs = '/action/logsGet?max_count=' + max_log_count;
 const prowl_url = 'https://api.prowlapp.com/publicapi/add';
 
 let do_request = (url, user, password, cb) => {
-	let auth = { auth: { user: user, pass: password } };
+	let auth = { auth: { user: user, pass: password, sendImmediately: true } };
 
 	request.get(url, auth, (err, res, body) => {
 		if(err) { cb(err); return; }

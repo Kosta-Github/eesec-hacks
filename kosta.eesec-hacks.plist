@@ -4,14 +4,14 @@
 	<dict>
 		<key>Label</key><string>kosta.eesec-hacks</string>
 		<key>WorkingDirectory</key><string>/Users/kosta/Services/eesec-hacks</string>
-	    <key>EnvironmentVariables</key><dict>
+		<key>EnvironmentVariables</key><dict>
 			<key>DEBUG</key><string>eesec:*</string>
 		</dict>
 		<key>ProgramArguments</key><array>
 			<string>/usr/local/bin/babel-node</string>
-    		<string>eesec-hacks.es6.js</string>
-	    </array>
-    	<key>StandardOutPath</key><string>./eesec-hacks.log</string>
+			<string>eesec-hacks.es6.js</string>
+		</array>
+		<key>StandardOutPath</key><string>./eesec-hacks.log</string>
 		<key>StandardErrorPath</key><string>./eesec-hacks.log</string>
 		<key>RunAtLoad</key><true/>
 		<key>KeepAlive</key><true/>

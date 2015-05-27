@@ -29,7 +29,7 @@ let config_alarm = require('./config_alarm.js');
 
 let do_request = (name, url, user, password) => {
 	debug('using URL: [%s] %s', name, url);
-	let auth = { auth: { user: user, pass: password } };
+	let auth = { auth: { user: user, pass: password, sendImmediately: true } };
 
 	request.get(url, auth, (err, res, body) => {
 		if(err) { debug('***** error: %s', err); return; }

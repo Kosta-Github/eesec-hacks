@@ -10,10 +10,15 @@ let config_alarm = require('./config_alarm.js');
 // };
 // module.exports = config_alarm;
 
-let config_prowl = require('./config_prowl.js');
-// let config_prowl = {
-//     apikey: 'abcedfghijklmnopqrstuvwxyz0123456789' // prowl API key from this page: https://www.prowlapp.com/api_settings.php
-// };
+let config_prowl = require('./config_siri.js');
+// let config_prowl = [
+//     {
+//         prowl_apikey: 'abcedfghijklmnopqrstuvwxyz0123456789' // prowl API key from this page: https://www.prowlapp.com/api_settings.php
+//     },
+//     {
+//         prowl_apikey: 'abcedfghijklmnopqrstuvwxyz0123456789' // prowl API key from this page: https://www.prowlapp.com/api_settings.php
+//     }
+// ];
 // module.exports = config_prowl;
 
 const max_log_count = 100;
@@ -22,6 +27,12 @@ const check_interval = 15; // in seconds
 const alarm_get_logs = '/action/logsGet?max_count=' + max_log_count;
 
 const prowl_url = 'https://api.prowlapp.com/publicapi/add';
+
+let collect_apikeys = (config_prowl) => {
+	let keys = config_prowl.map((c) => { return c.prowl_apikey; });
+	console.log('apikeys: ', keys.join(','));
+	return keys.join(',');
+};
 
 let do_request = (url, user, password, cb) => {
 	let auth = { auth: { user: user, pass: password, sendImmediately: true } };
@@ -37,7 +48,7 @@ let do_request = (url, user, password, cb) => {
 };
 
 
-let last_mode = 'Alarmanlage aus';
+let last_mode = undefined;
 
 let check_status = () => {
 	debug('checking status...');
@@ -45,7 +56,7 @@ let check_status = () => {
 	do_request(
 		config_alarm.base_url + alarm_get_logs, config_alarm.user, config_alarm.password,
 		(err, data) => {
-			if(err) { debug('***** error: %s', JSON.stringify(err)); throw err; }
+			if(err) { debug('***** error: %s', JSON.stringify(err)); return; }
 
 			for(var i in data.logrows) {
 				let row = data.logrows[i];
@@ -56,13 +67,12 @@ let check_status = () => {
 						case '{AREA_MODE_1}': mode = 'Alarmanlage an';   prio = 1; break;
 						case '{AREA_MODE_2}': mode = 'Alarmanlage home'; prio = 1; break;
 			        }
-					if(last_mode !== mode) {
+					if(last_mode && (last_mode !== mode)) {
 						let desc = 'mode changed from "' + last_mode + '" to "' + mode + '"';
 						debug(desc);
-						last_mode = mode;
 
 						let prowl_params = {
-							apikey:      config_prowl.apikey,
+							apikey:      collect_apikeys(config_prowl),
 							priority:    prio,
 							url:         '',
 							application: 'EESec',
@@ -72,6 +82,7 @@ let check_status = () => {
 
 						request.post(prowl_url, { form: prowl_params });
 					}
+					last_mode = mode;
 
 					break;
 			    }

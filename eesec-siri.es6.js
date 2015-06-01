@@ -3,6 +3,7 @@ let debug = require('debug')('eesec:siri');
 let request = require('request');
 
 import SiriNotes from './siri-notes.es6.js';
+import * as EesecUtils from './eesec-utils.es6.js';
 
 let config_siri = require('./config_siri.js');
 // let config_siri = [
@@ -31,69 +32,58 @@ let config_alarm = require('./config_alarm.js');
 
 const prowl_url = 'https://api.prowlapp.com/publicapi/add';
 
-let do_request = (url, user, password, cb) => {
-	let auth = { auth: { user: user, pass: password, sendImmediately: true } };
-
-	request.get(url, auth, (err, res, body) => {
-		if(err) { cb(err); return; }
-
-		if(res.statusCode != 200) { cb({ statusCode: res.statusCode, message: body }); return; }
-
-		body = body.replace(/\t/g, ' '); // replace tabs with spaces (otherwise this is an invalid JSON string!)
-		cb(undefined, JSON.parse(body));
-  	});
-};
-
-let switchMode = (msg, user_config, config_alarm) => {
-	let url = config_alarm.base_url + '/action/panelCondPost?area=1&mode=';
+let switchMode = (msg, config_user, config_alarm) => {
+	let mode = undefined;
 	switch(msg) {
-		case 'alarmanlage aus':  url += '0'; break;
-		case 'alarmanlage an':   url += '1'; break;
-		case 'alarmanlage home': url += '2'; break;
+		case 'alarmanlage aus':  mode = 'aus';  break;
+		case 'alarmanlage an':   mode = 'an';   break;
+		case 'alarmanlage home': mode = 'home'; break;
 		default:                 return;
 	}
 
-	debug('switch to mode: [%s] %s', user_config.name, msg);
-	do_request(url, config_alarm.user, config_alarm.password, (err, data) => {
-		if(err) {
-			debug('***** error: [%s]\n\t%s\n\t%s', user_config.name, url, err);
-		} else {
-			debug('URL response: [%s]\n\t%s\n\t%s', user_config.name, url, JSON.stringify(data));
-		}
+	debug('switch to mode: [%s] Alarmanlage %s', config_user.name, mode);
+	EesecUtils.set_mode(config_alarm, mode, (err, data) => {
+		if(err) { debug('***** error: [%s] %s', config_user.name, err); return; }
+		debug('URL response: [%s] %s', config_user.name, JSON.stringify(data));
 	});
 
 	return true;
 }
 
-let checkMode = (msg, user_config, config_alarm) => {
+let checkMode = (msg, config_user, config_alarm) => {
 	if(msg !== 'alarmanlage status') { return; }
 
-	debug('checking status: [%s]', user_config.name);
+	debug('checking status: [%s]', config_user.name);
+	EesecUtils.get_mode(config_alarm, (err1, mode) => {
+		EesecUtils.check_sensors(config_alarm, undefined, (err2, open_sensors) => {
+			EesecUtils.check_sensors(config_alarm, 'an', (err3, violations_an) => {
+				EesecUtils.check_sensors(config_alarm, 'home', (err4, violations_home) => {
+					if(err1 || err2 || err3 || err4) { debug('***** error: [%s] %s', config_user.name, err1 || err2 || err3 || err4); return; }
 
-	let url = config_alarm.base_url + '/action/panelCondGet';
-	do_request(url, config_alarm.user, config_alarm.password, (err, data) => {
-		if(err) { debug('***** error: [%s]\n\t%s\n\t%s', user_config.name, url, err); return; }
+					let indent = '\n        ';
 
-		let mode = data.updates.mode_a1;
-		switch(mode) {
-			case '{AREA_MODE_0}': mode = 'aus';  break;
-			case '{AREA_MODE_1}': mode = 'an';   break;
-			case '{AREA_MODE_2}': mode = 'home'; break;
-		}
-		debug('status: [%s] alarmanlage %s', user_config.name, mode);
+					let desc = '';
+					desc += 'Status: Alarmanlage ' + mode + '\n';
+					desc += '    geöffnete Fenster:'                   + indent + open_sensors.join(indent)    + '\n';
+					desc += '    Fenster schliessen für Modus "an":'   + indent + violations_an.join(indent)   + '\n';
+					desc += '    Fenster schliessen für Modus "home":' + indent + violations_home.join(indent) + '\n';
+					debug('Status:\n%s', desc);
 
-		if(user_config.prowl_apikey) {
-			let prowl_params = {
-				apikey:      user_config.prowl_apikey,
-				priority:    0,
-				url:         '',
-				application: 'EESec',
-				event:       'Status: Alarmanlage ' + mode,
-				description: 'Status: Alarmanlage ' + mode
-			};
+					if(config_user.prowl_apikey) {
+						let prowl_params = {
+							apikey:      config_user.prowl_apikey,
+							priority:    0,
+							url:         '',
+							application: 'EESec',
+							event:       'Status: Alarmanlage ' + mode,
+							description: desc
+						};
 
-			request.post(prowl_url, { form: prowl_params });
-		}
+						request.post(prowl_url, { form: prowl_params });
+					}
+				});
+			});
+		});
 	});
 
 	return true;

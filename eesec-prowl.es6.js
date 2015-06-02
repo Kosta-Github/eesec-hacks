@@ -29,7 +29,6 @@ const prowl_url = 'https://api.prowlapp.com/publicapi/add';
 
 let collect_apikeys = (config_prowl) => {
 	let keys = config_prowl.map((c) => { return c.prowl_apikey; });
-	console.log('apikeys: ', keys.join(','));
 	return keys.join(',');
 };
 
@@ -56,10 +55,11 @@ let check_status = () => {
 			if(err) { debug('***** error: %s', JSON.stringify(err)); return; }
 
 			let mode = data.updates.mode_a1;
+			let prio = 0;
 			switch(mode) {
-				case '{AREA_MODE_0}': mode = 'Alarmanlage aus';  break;
-				case '{AREA_MODE_1}': mode = 'Alarmanlage an';   break;
-				case '{AREA_MODE_2}': mode = 'Alarmanlage home'; break;
+				case '{AREA_MODE_0}': mode = 'Alarmanlage aus';  prio = 2; break;
+				case '{AREA_MODE_1}': mode = 'Alarmanlage an';   prio = 1; break;
+				case '{AREA_MODE_2}': mode = 'Alarmanlage home'; prio = 1; break;
 			}
 			debug('status: %s', mode);
 

@@ -4,13 +4,13 @@ let request = require('request');
 
 import * as EesecUtils from './eesec-utils.es6.js';
 
-let config_alarm = require('./config_alarm.js');
-// let config_alarm = {
+let config_eesec = require('./config_eesec.js');
+// let config_eesec = {
 //     base_url: 'http://eesec',  // EESec hostname (in the local network)
 //     user:     'EESec user',    // EESec username
 //     password: 'EESec password' // EESec password
 // };
-// module.exports = config_alarm;
+// module.exports = config_eesec;
 
 let config_prowl = require('./config_siri.js');
 // let config_prowl = [
@@ -35,7 +35,7 @@ let collect_apikeys = (config_prowl) => {
 let last_mode = undefined;
 
 let check_status = () => {
-	EesecUtils.get_full_status(config_alarm, (err, mode, msg) => {
+	EesecUtils.get_full_status(config_eesec, (err, mode, msg) => {
 		if(err) { debug('***** error: %s', err); return; }
 
 		debug('status: %s', mode);

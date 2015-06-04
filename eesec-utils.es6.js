@@ -68,7 +68,7 @@ function get_sensor_violations(sensors, mode_idx) {
 	return violations.map((sensor) => { return sensor.name; });
 };
 
-export function check_sensors(config_alarm, mode, cb) {
+function get_sensors(config_alarm, cb) {
 	debug('checking sensors...');
 
 	let alarm_get_sensors = '/action/deviceListGet';
@@ -77,9 +77,32 @@ export function check_sensors(config_alarm, mode, cb) {
 		(err, data) => {
 			if(err) { cb(err); return; }
 
-			let sensors = data.senrows.sort((s1, s2) => { return (s1.zone - s2.zone); })
-			sensors = (mode ? get_sensor_violations(sensors, mode_to_mode_idx(mode)) : get_open_sensors(sensors));
+			let sensors = data.senrows.sort((s1, s2) => { return (s1.zone - s2.zone); });
 			cb(undefined, sensors);
 		}
 	);
+};
+
+export function get_full_status(config_alarm, cb) {
+	debug('get full status...');
+
+	get_mode(config_alarm, (err1, mode) => {
+		get_sensors(config_alarm, (err2, sensors) => {
+			if(err1 || err2) { cb(err1 || err2); return; }
+
+			let sensors_open_all  = get_open_sensors(sensors);
+			let sensors_open_arm  = get_sensor_violations(sensors, mode_to_mode_idx('an'));
+			let sensors_open_home = get_sensor_violations(sensors, mode_to_mode_idx('home'));
+
+			let indent = '\n        ';
+
+			let msg = '';
+			msg += 'Status: Alarmanlage ' + mode + '\n';
+			msg += '    geöffnete Fenster:'                   + indent + sensors_open_all.join(indent)  + '\n';
+			msg += '    Fenster schliessen für Modus "an":'   + indent + sensors_open_arm.join(indent)  + '\n';
+			msg += '    Fenster schliessen für Modus "home":' + indent + sensors_open_home.join(indent) + '\n';
+			
+			cb(undefined, mode, msg);
+		});
+	});
 };

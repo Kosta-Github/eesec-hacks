@@ -45,6 +45,13 @@ let switchMode = (msg, config_user, config_alarm) => {
 	EesecUtils.set_mode(config_alarm, mode, (err, data) => {
 		if(err) { debug('***** error: [%s] %s', config_user.name, err); return; }
 		debug('URL response: [%s] %s', config_user.name, JSON.stringify(data));
+		if(data.result === 0) {
+			debug('retrying a second time: [%s]', config_user.name);
+			EesecUtils.set_mode(config_alarm, mode, (err, data) => {
+				if(err) { debug('***** error: [%s] %s', config_user.name, err); return; }
+				debug('second URL response: [%s] %s', config_user.name, JSON.stringify(data));
+			});
+		}
 	});
 
 	return true;
@@ -54,36 +61,22 @@ let checkMode = (msg, config_user, config_alarm) => {
 	if(msg !== 'alarmanlage status') { return; }
 
 	debug('checking status: [%s]', config_user.name);
-	EesecUtils.get_mode(config_alarm, (err1, mode) => {
-		EesecUtils.check_sensors(config_alarm, undefined, (err2, open_sensors) => {
-			EesecUtils.check_sensors(config_alarm, 'an', (err3, violations_an) => {
-				EesecUtils.check_sensors(config_alarm, 'home', (err4, violations_home) => {
-					if(err1 || err2 || err3 || err4) { debug('***** error: [%s] %s', config_user.name, err1 || err2 || err3 || err4); return; }
+	EesecUtils.get_full_status(config_alarm, (err, mode, msg) => {
+		if(err) { debug('***** error: [%s] %s', config_user.name, err); return; }
+		debug('Status:\n%s', msg);
 
-					let indent = '\n        ';
+		if(config_user.prowl_apikey) {
+			let prowl_params = {
+				apikey:      config_user.prowl_apikey,
+				priority:    0,
+				url:         '',
+				application: 'EESec',
+				event:       'Status: Alarmanlage ' + mode,
+				description: msg
+			};
 
-					let desc = '';
-					desc += 'Status: Alarmanlage ' + mode + '\n';
-					desc += '    geöffnete Fenster:'                   + indent + open_sensors.join(indent)    + '\n';
-					desc += '    Fenster schliessen für Modus "an":'   + indent + violations_an.join(indent)   + '\n';
-					desc += '    Fenster schliessen für Modus "home":' + indent + violations_home.join(indent) + '\n';
-					debug('Status:\n%s', desc);
-
-					if(config_user.prowl_apikey) {
-						let prowl_params = {
-							apikey:      config_user.prowl_apikey,
-							priority:    0,
-							url:         '',
-							application: 'EESec',
-							event:       'Status: Alarmanlage ' + mode,
-							description: desc
-						};
-
-						request.post(prowl_url, { form: prowl_params });
-					}
-				});
-			});
-		});
+			request.post(prowl_url, { form: prowl_params });
+		}
 	});
 
 	return true;

@@ -1,5 +1,4 @@
-node_modules
-eesec-hacks.log
-config_alarm.js
-config_prowl.js
+config_eesec.js
 config_siri.js
+eesec-hacks.log
+node_modules

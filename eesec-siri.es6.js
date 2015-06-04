@@ -22,17 +22,17 @@ let config_siri = require('./config_siri.js');
 // ];
 // module.exports = config_siri;
 
-let config_alarm = require('./config_alarm.js');
-// let config_alarm = {
+let config_eesec = require('./config_eesec.js');
+// let config_eesec = {
 //     base_url: 'http://eesec',  // EESec hostname (in the local network)
 //     user:     'EESec user',    // EESec username
 //     password: 'EESec password' // EESec password
 // };
-// module.exports = config_alarm;
+// module.exports = config_eesec;
 
 const prowl_url = 'https://api.prowlapp.com/publicapi/add';
 
-let switchMode = (msg, config_user, config_alarm) => {
+let switchMode = (msg, config_user, config_eesec) => {
 	let mode = undefined;
 	switch(msg) {
 		case 'alarmanlage aus':  mode = 'aus';  break;
@@ -42,12 +42,12 @@ let switchMode = (msg, config_user, config_alarm) => {
 	}
 
 	debug('switch to mode: [%s] Alarmanlage %s', config_user.name, mode);
-	EesecUtils.set_mode(config_alarm, mode, (err, data) => {
+	EesecUtils.set_mode(config_eesec, mode, (err, data) => {
 		if(err) { debug('***** error: [%s] %s', config_user.name, err); return; }
 		debug('URL response: [%s] %s', config_user.name, JSON.stringify(data));
 		if(data.result === 0) {
 			debug('retrying a second time: [%s]', config_user.name);
-			EesecUtils.set_mode(config_alarm, mode, (err, data) => {
+			EesecUtils.set_mode(config_eesec, mode, (err, data) => {
 				if(err) { debug('***** error: [%s] %s', config_user.name, err); return; }
 				debug('second URL response: [%s] %s', config_user.name, JSON.stringify(data));
 			});
@@ -57,11 +57,11 @@ let switchMode = (msg, config_user, config_alarm) => {
 	return true;
 }
 
-let checkMode = (msg, config_user, config_alarm) => {
+let checkMode = (msg, config_user, config_eesec) => {
 	if(msg !== 'alarmanlage status') { return; }
 
 	debug('checking status: [%s]', config_user.name);
-	EesecUtils.get_full_status(config_alarm, (err, mode, msg) => {
+	EesecUtils.get_full_status(config_eesec, (err, mode, msg) => {
 		if(err) { debug('***** error: [%s] %s', config_user.name, err); return; }
 		debug('Status:\n%s', msg);
 
@@ -82,18 +82,18 @@ let checkMode = (msg, config_user, config_alarm) => {
 	return true;
 }
 
-let handleMessage = (msg, user_config, config_alarm) => {
+let handleMessage = (msg, user_config, config_eesec) => {
 	msg = msg.toLowerCase();
 	debug('handling message: [%s] %s', user_config.name, msg);
 
-	if(switchMode(msg, user_config, config_alarm)) { return true; }
-	if(checkMode( msg, user_config, config_alarm)) { return true; }
+	if(switchMode(msg, user_config, config_eesec)) { return true; }
+	if(checkMode( msg, user_config, config_eesec)) { return true; }
 
 	debug('***** no handler found for message: [%s] %s', user_config.name, msg); return;
 }
 
 let connections = config_siri.map((user_config) => {
 	return new SiriNotes(user_config, (msg) => {
-		return handleMessage(msg, user_config, config_alarm);
+		return handleMessage(msg, user_config, config_eesec);
 	});
 });

@@ -24,9 +24,9 @@ function mode_to_mode_idx(mode) {
 	}
 }
 
-export function get_mode(config_alarm, cb) {
-	let url = config_alarm.base_url + '/action/panelCondGet';
-	do_request(url, config_alarm.user, config_alarm.password, (err, data) => {
+export function get_mode(config_eesec, cb) {
+	let url = config_eesec.base_url + '/action/panelCondGet';
+	do_request(url, config_eesec.user, config_eesec.password, (err, data) => {
 		if(err) { cb(err); return; }
 
 		let mode = data.updates.mode_a1;
@@ -40,10 +40,10 @@ export function get_mode(config_alarm, cb) {
 	});
 };
 
-export function set_mode(config_alarm, mode, cb) {
+export function set_mode(config_eesec, mode, cb) {
 	let mode_idx = mode_to_mode_idx(mode);
-	let url = config_alarm.base_url + '/action/panelCondPost?area=1&mode=' + mode_idx;
-	do_request(url, config_alarm.user, config_alarm.password, cb);
+	let url = config_eesec.base_url + '/action/panelCondPost?area=1&mode=' + mode_idx;
+	do_request(url, config_eesec.user, config_eesec.password, cb);
 };
 
 
@@ -68,12 +68,12 @@ function get_sensor_violations(sensors, mode_idx) {
 	return violations.map((sensor) => { return sensor.name; });
 };
 
-function get_sensors(config_alarm, cb) {
+function get_sensors(config_eesec, cb) {
 	debug('checking sensors...');
 
 	let alarm_get_sensors = '/action/deviceListGet';
 	do_request(
-		config_alarm.base_url + alarm_get_sensors, config_alarm.user, config_alarm.password,
+		config_eesec.base_url + alarm_get_sensors, config_eesec.user, config_eesec.password,
 		(err, data) => {
 			if(err) { cb(err); return; }
 
@@ -83,11 +83,11 @@ function get_sensors(config_alarm, cb) {
 	);
 };
 
-export function get_full_status(config_alarm, cb) {
+export function get_full_status(config_eesec, cb) {
 	debug('get full status...');
 
-	get_mode(config_alarm, (err1, mode) => {
-		get_sensors(config_alarm, (err2, sensors) => {
+	get_mode(config_eesec, (err1, mode) => {
+		get_sensors(config_eesec, (err2, sensors) => {
 			if(err1 || err2) { cb(err1 || err2); return; }
 
 			let sensors_open_all  = get_open_sensors(sensors);

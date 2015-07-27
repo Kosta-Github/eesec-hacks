@@ -57,7 +57,7 @@ export default class SiriNotes {
 	fetchMessage(msg_uid) {
 		debug('fetching message: [%s] {%s}', this.config.name, msg_uid);
 
-		let f = this.imap.fetch(msg_uid, { bodies: 'HEADER.FIELDS (SUBJECT)' });
+		let f = this.imap.fetch(msg_uid, { bodies: 'HEADER.FIELDS (SUBJECT DATE)' });
 		f.on('message', (msg) => {
 			msg.on('body', (stream) => {
 				let buffer = '';
@@ -65,10 +65,20 @@ export default class SiriNotes {
 					buffer += chunk.toString('utf8');
 				});
 				stream.on('end', () => {
-					let subj = Imap.parseHeader(buffer).subject[0];
-					debug('new message: [%s] "%s" {%s}', this.config.name, subj, msg_uid);
-					if(this.handle_cb(subj)) {
-						this.deleteMessage(msg_uid);
+					let headers = Imap.parseHeader(buffer);
+					let subj = headers.subject[0];
+					let date = Date.parse(headers.date[0]);
+
+					let now = Date.now();
+					let diff = (now - date) / 1000;
+
+					debug('new message: [%s] "%s" {#%s} [%s secs]', this.config.name, subj, msg_uid, diff);
+					if(Math.abs(diff) < 60) {
+						if(this.handle_cb(subj)) {
+							this.deleteMessage(msg_uid);
+						}
+					} else {
+						debug('**** time diff too large: [%s] %s min => ignoring this message...', this.config.name, (diff / 60) | 0);
 					}
 				});
 				stream.on('error', (err) => { this.throw_on_error(err); });
@@ -96,6 +106,6 @@ export default class SiriNotes {
 			debug('***** error: [%s] %s', this.config.name, err);
 			throw err;
 		}
-	} 
+	}
 
 }

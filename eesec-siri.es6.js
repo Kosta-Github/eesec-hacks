@@ -82,12 +82,24 @@ let checkMode = (msg, config_user, config_eesec) => {
 	return true;
 }
 
+let requestImage = (msg, config_user, config_eesec) => {
+	if(msg !== 'wer ist an der tür') { return; }
+
+	debug('requesting new image: [%s]', config_user.name);
+	EesecUtils.request_image(config_eesec, config_eesec.camera_id, (err, mode, msg) => {
+		if(err) { debug('***** error: [%s] %s', config_user.name, err); return; }
+	});
+
+	return true;
+}
+
 let handleMessage = (msg, user_config, config_eesec) => {
 	msg = msg.toLowerCase();
 	debug('handling message: [%s] %s', user_config.name, msg);
 
-	if(switchMode(msg, user_config, config_eesec)) { return true; }
-	if(checkMode( msg, user_config, config_eesec)) { return true; }
+	if(switchMode(  msg, user_config, config_eesec)) { return true; }
+	if(checkMode(   msg, user_config, config_eesec)) { return true; }
+	if(requestImage(msg, user_config, config_eesec)) { return true; }
 
 	debug('***** no handler found for message: [%s] %s', user_config.name, msg); return;
 }

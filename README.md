@@ -29,8 +29,9 @@ Supported `Siri` commands (in German):
 * `Neue Notiz Alarmanlage an`
 * `Neue Notiz Alarmanlage home`
 * `Neue Notiz Alarmanlage status` => delivers current status via `prowl` to your iOS device(s)
+* `Neue Notiz Wer ist an der Tür` => requests a new image from the camera and delivers it via `prowl`
 
-And every `EESec mode` change will be automatically reported via a `prowl` push notification within 15 seconds.
+And every `EESec mode` change and new `EESec image` will be automatically reported via a `prowl` push notification within a timeframe of 15 seconds.
 
 Misc
 ====

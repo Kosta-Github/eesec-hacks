@@ -40,6 +40,29 @@ export function get_mode(config_eesec, cb) {
 	});
 };
 
+export function get_latest_image(config_eesec, cb) {
+	let url = config_eesec.base_url + '/action/captureEventListGet?max_count=1';
+	do_request(url, config_eesec.user, config_eesec.password, (err, data) => {
+		if(err) { cb(err); return; }
+
+		if(!data.caprows) { cb(); return; }
+		let capture = data.caprows[0];
+		if(!capture.files || !capture.files[0]) { cb(); return; }
+
+		let result = {
+			timestamp: new Date(parseInt(capture.time, 10) * 1000),
+			image_url: capture.files[0]
+		};
+
+		cb(undefined, result);
+	});
+};
+
+export function request_image(config_eesec, sensor_id, cb) {
+	let url = config_eesec.base_url + '/action/deviceRequestMedia?id=' + sensor_id;
+	do_request(url, config_eesec.user, config_eesec.password, cb);
+};
+
 export function set_mode(config_eesec, mode, cb) {
 	let mode_idx = mode_to_mode_idx(mode);
 	let url = config_eesec.base_url + '/action/panelCondPost?area=1&mode=' + mode_idx;
@@ -101,7 +124,7 @@ export function get_full_status(config_eesec, cb) {
 			msg += '    geöffnete Fenster:'                   + indent + sensors_open_all.join(indent)  + '\n';
 			msg += '    Fenster schliessen für Modus "an":'   + indent + sensors_open_arm.join(indent)  + '\n';
 			msg += '    Fenster schliessen für Modus "home":' + indent + sensors_open_home.join(indent) + '\n';
-			
+
 			cb(undefined, mode, msg);
 		});
 	});

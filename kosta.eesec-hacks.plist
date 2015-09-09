@@ -5,7 +5,7 @@
 		<key>Label</key><string>kosta.eesec-hacks</string>
 		<key>WorkingDirectory</key><string>/Users/kosta/Services/eesec-hacks</string>
 		<key>EnvironmentVariables</key><dict>
-			<key>DEBUG</key><string>eesec:*</string>
+			<key>DEBUG</key><string>eesec:*,siri*</string>
 		</dict>
 		<key>ProgramArguments</key><array>
 			<string>/usr/local/bin/babel-node</string>
